@@ -1,1 +1,174 @@
-index.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rx31 | Global Digital Library</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #06b6d4;
+            --text: #f8fafc;
+            --dim: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .logo { font-size: 2.5rem; font-weight: 800; color: var(--accent); margin-bottom: 5px; }
+
+        /* Global Bookshelves Section */
+        .shelf-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 0 20px;
+        }
+
+        .shelf-card {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid var(--accent);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .shelf-card:hover { background: var(--accent); color: #000; }
+
+        .search-box { max-width: 600px; margin: 30px auto; }
+        input { width: 100%; padding: 15px; border-radius: 30px; border: 2px solid #334155; background: var(--card); color: white; outline: none; }
+        
+        .categories { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
+        .cat-btn { background: none; color: var(--dim); border: 1px solid #334155; padding: 8px 15px; border-radius: 20px; cursor: pointer; }
+        .cat-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .library-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+
+        .book-card { 
+            background: var(--card); 
+            padding: 25px; 
+            border-radius: 15px; 
+            border: 1px solid #334155; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .badge { font-size: 0.7rem; color: var(--accent); font-weight: bold; text-transform: uppercase; }
+        .btn-dl { display: block; background: var(--accent); color: #000; text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">rx31 GLOBAL SHELF</div>
+    <p style="color: var(--dim)">Accessing Major Medical & Academic Repositories</p>
+    
+    <div class="shelf-container">
+        <a href="https://libgen.li" target="_blank" class="shelf-card">📚 LibGen</a>
+        <a href="https://www.ncbi.nlm.nih.gov/books/" target="_blank" class="shelf-card">🔬 NCBI Bookshelf</a>
+        <a href="https://openlibrary.org" target="_blank" class="shelf-card">📖 Open Library</a>
+        <a href="https://annas-archive.org" target="_blank" class="shelf-card">📂 Anna's Archive</a>
+        <a href="https://www.who.int/publications" target="_blank" class="shelf-card">🌍 WHO Library</a>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="mainSearch" placeholder="Search curated books..." onkeyup="runFilters()">
+    </div>
+
+    <div class="categories">
+        <button class="cat-btn active" onclick="setCategory('All')">All</button>
+        <button class="cat-btn" onclick="setCategory('Pharmacy')">Pharmacy</button>
+        <button class="cat-btn" onclick="setCategory('Chemistry')">Chemistry</button>
+        <button class="cat-btn" onclick="setCategory('Linguistics')">Linguistics</button>
+    </div>
+</header>
+
+<div class="library-grid" id="bookGrid"></div>
+
+<script>
+    const libraryData = [
+        // PHARMACY
+        { title: "Goodman & Gilman's Pharmacology", author: "Brunton", category: "Pharmacy" },
+        { title: "Pharmacotherapy: A Pathophysiologic Approach", author: "DiPiro", category: "Pharmacy" },
+        { title: "British Pharmacopoeia 2026", author: "MHRA", category: "Pharmacy" },
+        { title: "Ansel's Pharmaceutical Dosage Forms", author: "Allen", category: "Pharmacy" },
+        { title: "Martindale: The Complete Drug Reference", author: "Buckingham", category: "Pharmacy" },
+        // CHEMISTRY
+        { title: "Vogel's Quantitative Chemical Analysis", author: "Mendham", category: "Chemistry" },
+        { title: "Foye's Principles of Medicinal Chemistry", author: "Lemke", category: "Chemistry" },
+        { title: "Organic Chemistry", author: "Clayden", category: "Chemistry" },
+        // LINGUISTICS
+        { title: "The Study of Language", author: "George Yule", category: "Linguistics" },
+        { title: "Functional Grammar", author: "Halliday", category: "Linguistics" }
+    ];
+
+    let activeCategory = 'All';
+
+    function renderLibrary(books) {
+        const grid = document.getElementById('bookGrid');
+        grid.innerHTML = '';
+        books.forEach(book => {
+            const searchUrl = `https://libgen.li/index.php?req=${encodeURIComponent(book.title + " " + book.author)}`;
+            grid.innerHTML += `
+                <div class="book-card">
+                    <div>
+                        <div class="badge">${book.category}</div>
+                        <h3>${book.title}</h3>
+                        <p style="color:var(--dim)">${book.author}</p>
+                    </div>
+                    <a href="${searchUrl}" target="_blank" class="btn-dl">Download PDF</a>
+                </div>`;
+        });
+    }
+
+    function setCategory(cat) {
+        activeCategory = cat;
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.innerText === cat) btn.classList.add('active');
+        });
+        runFilters();
+    }
+
+    function runFilters() {
+        const query = document.getElementById('mainSearch').value.toLowerCase();
+        const filtered = libraryData.filter(book => {
+            const matchesSearch = book.title.toLowerCase().includes(query) || book.author.toLowerCase().includes(query);
+            const matchesCat = (activeCategory === 'All' || book.category === activeCategory);
+            return matchesSearch && matchesCat;
+        });
+        renderLibrary(filtered);
+    }
+
+    renderLibrary(libraryData);
+</script>
+</body>
+</html>
